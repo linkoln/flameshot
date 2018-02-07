@@ -24,15 +24,15 @@
 // manipulate the buttons as a unit.
 
 ButtonHandler::ButtonHandler(const QVector<CaptureButton*> &v,
-                             const QRect &limits, QObject *parent) :
-    QObject(parent), m_limits(limits)
+                             QObject *parent) :
+    QObject(parent)
 {
     setButtons(v);
     init();
 }
 
-ButtonHandler::ButtonHandler(const QRect &limits, QObject *parent) :
-    QObject(parent), m_limits(limits)
+ButtonHandler::ButtonHandler(QObject *parent) :
+    QObject(parent)
 {
     init();
 }
