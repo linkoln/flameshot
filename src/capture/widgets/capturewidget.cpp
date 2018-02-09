@@ -44,7 +44,7 @@
 
 // enableSaveWIndow
 CaptureWidget::CaptureWidget(const uint id, const QString &forcedSavePath,
-                             QWidget *parent) :
+                             CaptureWidget::LaunchMode mode, QWidget *parent) :
     QWidget(parent), m_screenshot(nullptr), m_mouseOverHandle(0),
     m_mouseIsClicked(false), m_rightClick(false), m_newSelection(false),
     m_grabbing(false), m_captureDone(false), m_toolIsForDrawing(false),
@@ -75,18 +75,56 @@ CaptureWidget::CaptureWidget(const uint id, const QString &forcedSavePath,
     updateCursor();
     initShortcuts();
 
-    // init content
-    bool ok = true;
-    QPixmap fullScreenshot(ScreenGrabber().grabEntireDesktop(ok));
-    if(!ok) {
-        SystemNotification().sendMessage(tr("Unable to capture screen"));
-        this->close();
-    }
-    m_screenshot = new Screenshot(fullScreenshot, this);
+#ifdef Q_OS_WIN
+    QPoint topLeft(0,0);
+#endif
+    if (mode == FULLSCREEN) {
+        // init content
+        bool ok = true;
+        QPixmap fullScreenshot(ScreenGrabber().grabEntireDesktop(ok));
+        if(!ok) {
+            SystemNotification().sendMessage(tr("Unable to capture screen"));
+            this->close();
+        }
+        m_screenshot = new Screenshot(fullScreenshot, this);
 
+#ifdef Q_OS_WIN
+        setWindowFlags(Qt::WindowStaysOnTopHint
+                       | Qt::FramelessWindowHint
+                       | Qt::Popup);
+
+        for (QScreen *const screen : QGuiApplication::screens()) {
+            QPoint topLeftScreen = screen->geometry().topLeft();
+            if (topLeft.x() > topLeftScreen.x() ||
+                    topLeft.y() > topLeftScreen.y()) {
+                topLeft = topLeftScreen;
+            }
+        }
+        move(topLeft);
+#else
+        setWindowFlags(Qt::BypassWindowManagerHint
+                       | Qt::WindowStaysOnTopHint
+                       | Qt::FramelessWindowHint
+                       | Qt::Tool);
+#endif
+        resize(pixmap().size());
+    }
     // create buttons
     m_buttonHandler = new ButtonHandler(this);
     updateButtons();
+    QVector<QRect> areas;
+    if (mode == FULLSCREEN) {
+        for (QScreen *const screen : QGuiApplication::screens()) {
+            QRect r = screen->geometry();
+#ifdef Q_OS_WIN
+            r -= topLeft;
+#endif
+            areas.append(r);
+        }
+    } else {
+        areas.append(rect());
+    }
+    m_buttonHandler->updateScreenRegions(areas);
     m_buttonHandler->hide();
     // init interface color
     m_colorPicker = new ColorPicker(this);

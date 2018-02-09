@@ -41,7 +41,7 @@ public:
     void updatePosition(const QRect &selection);
     void setButtons(const QVector<CaptureButton*>);
     bool contains(const QPoint &p) const;
-    void updateScreenRegions();
+    void updateScreenRegions(const QVector<QRect> &rects);
 
 public slots:
     void hide();
