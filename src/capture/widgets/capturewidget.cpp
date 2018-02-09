@@ -117,7 +117,7 @@ CaptureWidget::CaptureWidget(const uint id, const QString &forcedSavePath,
         for (QScreen *const screen : QGuiApplication::screens()) {
             QRect r = screen->geometry();
 #ifdef Q_OS_WIN
-            r -= topLeft;
+            r.moveTo(r.topLeft() - topLeft);
 #endif
             areas.append(r);
         }
