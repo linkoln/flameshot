@@ -3,9 +3,9 @@
 #include <QApplication>
 
 #ifndef Q_OS_WIN
-#include <QDBusConnection>
-#include <QDBusMessage>
-#include <QDBusInterface>
+//#include <QDBusConnection>
+//#include <QDBusMessage>
+//#include <QDBusInterface>
 #else
 #endif
 #include "src/core/controller.h"
@@ -47,7 +47,7 @@ void SystemNotification::sendMessage(
          << QStringList()                //actions
          << QVariantMap()                //hints
          << timeout;                     //timeout
-    m_interface->callWithArgumentList(QDBus::AutoDetect, "Notify", args);
+//    m_interface->callWithArgumentList(QDBus::AutoDetect, "Notify", args);
 #else
     auto c = Controller::getInstance();
     c->sendTrayNotification(text, title, timeout);

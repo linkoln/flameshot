@@ -28,6 +28,8 @@
 #include <QTimer>
 #include <QDir>
 
+#include "widgets/mainwindow.h"
+
 #ifdef Q_OS_LINUX
 #include "src/core/flameshotdbusadapter.h"
 #include "src/utils/dbusutils.h"
@@ -45,19 +47,19 @@ int main(int argc, char *argv[]) {
     if (argc == 1) {
         SingleApplication app(argc, argv);
 
-        QTranslator translator;
-        QStringList trPaths = PathInfo::translationsPaths();
-        bool match = false;
-        for (const QString &path: trPaths) {
-            match = translator.load(QLocale::system().language(),
-                                    "Internationalization", "_",
-                                    path);
-            if (match) {
-                break;
-            }
-        }
+//        QTranslator translator;
+//        QStringList trPaths = PathInfo::translationsPaths();
+//        bool match = false;
+//        for (const QString &path: trPaths) {
+//            match = translator.load(QLocale::system().language(),
+//                                    "Internationalization", "_",
+//                                    path);
+//            if (match) {
+//                break;
+//            }
+//        }
 
-        app.installTranslator(&translator);
+//        app.installTranslator(&translator);
         app.setAttribute(Qt::AA_DontCreateNativeWidgetSiblings, true);
         app.setApplicationName("flameshot");
         app.setOrganizationName("Dharkael");
@@ -76,6 +78,10 @@ int main(int argc, char *argv[]) {
         // Create inicial static instance
         Controller::getInstance();
 #endif
+
+        MainWindow m;
+        m.show();
+
         return app.exec();
     }
 
@@ -189,153 +195,154 @@ int main(int argc, char *argv[]) {
         goto finish;
     }
 
-    // PROCESS DATA
-    //--------------
-    if (parser.isSet(helpOption) || parser.isSet(versionOption)) {
-    }
-    else if (parser.isSet(guiArgument)) { // GUI
-        QString pathValue = parser.value(pathOption);
-        int delay = parser.value(delayOption).toInt();
-        bool isRaw = parser.isSet(rawImageOption);
-        uint id = qHash(app.arguments().join(" "));
-        DBusUtils utils(id);
+//    // PROCESS DATA
+//    //--------------
+//    if (parser.isSet(helpOption) || parser.isSet(versionOption)) {
+//    }
+//    else if (parser.isSet(guiArgument)) { // GUI
+//        QString pathValue = parser.value(pathOption);
+//        int delay = parser.value(delayOption).toInt();
+//        bool isRaw = parser.isSet(rawImageOption);
+//        uint id = qHash(app.arguments().join(" "));
+//        DBusUtils utils(id);
 
-        // Send message
-        QDBusMessage m = QDBusMessage::createMethodCall("org.dharkael.Flameshot",
-                                           "/", "", "graphicCapture");
-        m << pathValue << delay << id;
-        QDBusConnection sessionBus = QDBusConnection::sessionBus();
-        utils.checkDBusConnection(sessionBus);
-        sessionBus.call(m);
+//        // Send message
+//        QDBusMessage m = QDBusMessage::createMethodCall("org.dharkael.Flameshot",
+//                                           "/", "", "graphicCapture");
+//        m << pathValue << delay << id;
+//        QDBusConnection sessionBus = QDBusConnection::sessionBus();
+//        utils.checkDBusConnection(sessionBus);
+//        sessionBus.call(m);
 
-        if (isRaw) {
-            // captureTaken
-            sessionBus.connect("org.dharkael.Flameshot",
-                               "/", "", "captureTaken",
-                               &utils,
-                               SLOT(captureTaken(uint, QByteArray)));
-            // captureFailed
-            sessionBus.connect("org.dharkael.Flameshot",
-                               "/", "", "captureFailed",
-                               &utils,
-                               SLOT(captureFailed(uint)));
-            QTimer t;
-            t.setInterval(1000 * 60 * 15); // 15 minutes timeout
-            QObject::connect(&t, &QTimer::timeout, qApp,
-                             &QCoreApplication::quit);
-            t.start();
-            // wait
-            app.exec();
-        }
-    }
-    else if (parser.isSet(fullArgument)) { // FULL
-        QString pathValue = parser.value(pathOption);
-        int delay = parser.value(delayOption).toInt();
-        bool toClipboard = parser.isSet(clipboardOption);
-        bool isRaw = parser.isSet(rawImageOption);
-        // Not a valid command
-        if (!isRaw && !toClipboard && pathValue.isEmpty()) {
-            QTextStream(stdout) << "you have to set a valid flag:\n\n";
-            parser.parse(QStringList() << argv[0] << "full" << "-h");
-            goto finish;
-        }
+//        if (isRaw) {
+//            // captureTaken
+//            sessionBus.connect("org.dharkael.Flameshot",
+//                               "/", "", "captureTaken",
+//                               &utils,
+//                               SLOT(captureTaken(uint, QByteArray)));
+//            // captureFailed
+//            sessionBus.connect("org.dharkael.Flameshot",
+//                               "/", "", "captureFailed",
+//                               &utils,
+//                               SLOT(captureFailed(uint)));
+//            QTimer t;
+//            t.setInterval(1000 * 60 * 15); // 15 minutes timeout
+//            QObject::connect(&t, &QTimer::timeout, qApp,
+//                             &QCoreApplication::quit);
+//            t.start();
+//            // wait
+//            app.exec();
+//        }
+//    }
+//    else if (parser.isSet(fullArgument)) { // FULL
+//        QString pathValue = parser.value(pathOption);
+//        int delay = parser.value(delayOption).toInt();
+//        bool toClipboard = parser.isSet(clipboardOption);
+//        bool isRaw = parser.isSet(rawImageOption);
+//        // Not a valid command
+//        if (!isRaw && !toClipboard && pathValue.isEmpty()) {
+//            QTextStream(stdout) << "you have to set a valid flag:\n\n";
+//            parser.parse(QStringList() << argv[0] << "full" << "-h");
+//            goto finish;
+//        }
 
-        uint id = qHash(app.arguments().join(" "));
-        DBusUtils utils(id);
+//        uint id = qHash(app.arguments().join(" "));
+//        DBusUtils utils(id);
 
-        // Send message
-        QDBusMessage m = QDBusMessage::createMethodCall("org.dharkael.Flameshot",
-                                               "/", "", "fullScreen");
-        m << pathValue << toClipboard << delay << id;
-        QDBusConnection sessionBus = QDBusConnection::sessionBus();
-        utils.checkDBusConnection(sessionBus);
-        sessionBus.call(m);
+//        // Send message
+//        QDBusMessage m = QDBusMessage::createMethodCall("org.dharkael.Flameshot",
+//                                               "/", "", "fullScreen");
+//        m << pathValue << toClipboard << delay << id;
+//        QDBusConnection sessionBus = QDBusConnection::sessionBus();
+//        utils.checkDBusConnection(sessionBus);
+//        sessionBus.call(m);
 
-        if (isRaw) {
-            // captureTaken
-            sessionBus.connect("org.dharkael.Flameshot",
-                               "/", "", "captureTaken",
-                               &utils,
-                               SLOT(captureTaken(uint, QByteArray)));
-            // captureFailed
-            sessionBus.connect("org.dharkael.Flameshot",
-                               "/", "", "captureFailed",
-                               &utils,
-                               SLOT(captureFailed(uint)));
-            // timeout just in case
-            QTimer t;
-            t.setInterval(2000);
-            QObject::connect(&t, &QTimer::timeout, qApp,
-                             &QCoreApplication::quit);
-            t.start();
-            // wait
-            app.exec();
-        }
-    }
-    else if (parser.isSet(configArgument)) { // CONFIG
-        bool filename = parser.isSet(filenameOption);
-        bool tray = parser.isSet(trayOption);
-        bool help = parser.isSet(showHelpOption);
-        bool mainColor = parser.isSet(mainColorOption);
-        bool contrastColor = parser.isSet(contrastColorOption);
-        bool someFlagSet = (filename || tray || help ||
-                            mainColor || contrastColor);
-        ConfigHandler config;
-        if (filename) {
-            QString newFilename(parser.value(filenameOption));
-            config.setFilenamePattern(newFilename);
-            FileNameHandler fh;
-            QTextStream(stdout)
-                    << QStringLiteral("The new pattern is '%1'\n"
-                                      "Parsed pattern example: %2\n").arg(newFilename)
-                       .arg(fh.parsedPattern());
-        }
-        if (tray) {
-            QDBusMessage m = QDBusMessage::createMethodCall("org.dharkael.Flameshot",
-                                               "/", "", "trayIconEnabled");
-            if (parser.value(trayOption) == "false") {
-                m << false;
-            } else if (parser.value(trayOption) == "true") {
-                m << true;
-            }
-            QDBusConnection sessionBus = QDBusConnection::sessionBus();
-            if (!sessionBus.isConnected()) {
-                SystemNotification().sendMessage(
-                            QObject::tr("Unable to connect via DBus"));
-            }
-            sessionBus.call(m);
-        }
-        if (help) {
-            if (parser.value(showHelpOption) == "false") {
-                config.setShowHelp(false);
-            } else if (parser.value(showHelpOption) == "true") {
-                config.setShowHelp(true);
-            }
-        }
-        if (mainColor) {
-            QString colorCode = parser.value(mainColorOption);
-            QColor parsedColor(colorCode);
-            config.setUIMainColor(parsedColor);
-        }
-        if (contrastColor) {
-            QString colorCode = parser.value(contrastColorOption);
-            QColor parsedColor(colorCode);
-            config.setUIContrastColor(parsedColor);
-        }
+//        if (isRaw) {
+//            // captureTaken
+//            sessionBus.connect("org.dharkael.Flameshot",
+//                               "/", "", "captureTaken",
+//                               &utils,
+//                               SLOT(captureTaken(uint, QByteArray)));
+//            // captureFailed
+//            sessionBus.connect("org.dharkael.Flameshot",
+//                               "/", "", "captureFailed",
+//                               &utils,
+//                               SLOT(captureFailed(uint)));
+//            // timeout just in case
+//            QTimer t;
+//            t.setInterval(2000);
+//            QObject::connect(&t, &QTimer::timeout, qApp,
+//                             &QCoreApplication::quit);
+//            t.start();
+//            // wait
+//            app.exec();
+//        }
+//    }
+//    else if (parser.isSet(configArgument)) { // CONFIG
+//        bool filename = parser.isSet(filenameOption);
+//        bool tray = parser.isSet(trayOption);
+//        bool help = parser.isSet(showHelpOption);
+//        bool mainColor = parser.isSet(mainColorOption);
+//        bool contrastColor = parser.isSet(contrastColorOption);
+//        bool someFlagSet = (filename || tray || help ||
+//                            mainColor || contrastColor);
+//        ConfigHandler config;
+//        if (filename) {
+//            QString newFilename(parser.value(filenameOption));
+//            config.setFilenamePattern(newFilename);
+//            FileNameHandler fh;
+//            QTextStream(stdout)
+//                    << QStringLiteral("The new pattern is '%1'\n"
+//                                      "Parsed pattern example: %2\n").arg(newFilename)
+//                       .arg(fh.parsedPattern());
+//        }
+//        if (tray) {
+//            QDBusMessage m = QDBusMessage::createMethodCall("org.dharkael.Flameshot",
+//                                               "/", "", "trayIconEnabled");
+//            if (parser.value(trayOption) == "false") {
+//                m << false;
+//            } else if (parser.value(trayOption) == "true") {
+//                m << true;
+//            }
+//            QDBusConnection sessionBus = QDBusConnection::sessionBus();
+//            if (!sessionBus.isConnected()) {
+//                SystemNotification().sendMessage(
+//                            QObject::tr("Unable to connect via DBus"));
+//            }
+//            sessionBus.call(m);
+//        }
+//        if (help) {
+//            if (parser.value(showHelpOption) == "false") {
+//                config.setShowHelp(false);
+//            } else if (parser.value(showHelpOption) == "true") {
+//                config.setShowHelp(true);
+//            }
+//        }
+//        if (mainColor) {
+//            QString colorCode = parser.value(mainColorOption);
+//            QColor parsedColor(colorCode);
+//            config.setUIMainColor(parsedColor);
+//        }
+//        if (contrastColor) {
+//            QString colorCode = parser.value(contrastColorOption);
+//            QColor parsedColor(colorCode);
+//            config.setUIContrastColor(parsedColor);
+//        }
 
-        // Open gui when no options
-        if (!someFlagSet) {
-            QDBusMessage m = QDBusMessage::createMethodCall("org.dharkael.Flameshot",
-                                               "/", "", "openConfig");
-            QDBusConnection sessionBus = QDBusConnection::sessionBus();
-            if (!sessionBus.isConnected()) {
-                SystemNotification().sendMessage(
-                            QObject::tr("Unable to connect via DBus"));
-            }
-            sessionBus.call(m);
-        }
-    }
+//        // Open gui when no options
+//        if (!someFlagSet) {
+//            QDBusMessage m = QDBusMessage::createMethodCall("org.dharkael.Flameshot",
+//                                               "/", "", "openConfig");
+//            QDBusConnection sessionBus = QDBusConnection::sessionBus();
+//            if (!sessionBus.isConnected()) {
+//                SystemNotification().sendMessage(
+//                            QObject::tr("Unable to connect via DBus"));
+//            }
+//            sessionBus.call(m);
+//        }
+//    }
 finish:
+    app.exec();
 
 #endif
     return 0;
